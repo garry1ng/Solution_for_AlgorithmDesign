@@ -1,0 +1,317 @@
+\documentclass{article}
+\author{Lin Jiaying}
+\title{Chap.4 Exercise}
+\usepackage{algorithm}
+\usepackage{xcolor}
+\usepackage{graphicx}
+
+\usepackage{color}
+\usepackage{alltt}
+\usepackage[T1]{fontenc}
+\usepackage{marvosym}
+
+% highlight theme: vim bclear
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.2,0.2,0.2}{#1}}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.06,0.58,0.63}{#1}}
+\newcommand{\hlesc}[1]{\textcolor[rgb]{0.86,0.41,0.09}{#1}}
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.06,0.58,0.63}{#1}}
+\newcommand{\hlpps}[1]{\textcolor[rgb]{0.06,0.58,0.63}{#1}}
+\newcommand{\hlslc}[1]{\textcolor[rgb]{0.59,0.59,0.59}{#1}}
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.59,0.59,0.59}{#1}}
+\newcommand{\hlppc}[1]{\textcolor[rgb]{0.41,0.78,0.23}{#1}}
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0.2,0.2,0.2}{#1}}
+\newcommand{\hlipl}[1]{\textcolor[rgb]{0.45,0.46,0.77}{#1}}
+\newcommand{\hllin}[1]{\textcolor[rgb]{0.59,0.59,0.59}{#1}}
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.23,0.42,0.78}{#1}}
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.63,0,0.31}{#1}}
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0,0.63,0.31}{#1}}
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.78,0.23,0.41}{#1}}
+\definecolor{bgcolor}{rgb}{1,1,1}
+
+
+\usepackage{algorithmic}
+%listings
+\usepackage{listings}
+
+\usepackage{amsmath}
+\renewcommand{\algorithmicrequire}{\textbf{Input:}} 
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\begin{document}
+	\maketitle
+\section{Exercise 4.5}
+\textbf{Implement the rank finding algorithm based upon the divide-and-conquer approach. Compare it with the straightforward approach.}
+
+\section{Solution: }
+
+	The divide-and-conquer method to solve this problem is similar to the maxima finding problem showed in PPT. 
+	
+	\paragraph{Step 1:}
+	If the set S contains only one points, return this point rank as 0.\\	
+	Else, split the points along the y-axis line L in median x-axis position into Set L and Set R. The x positions of the points in $S_L$ is all smaller than the median in x, and the points in $S_R$ is on contrary.
+	\paragraph{Step 2:}
+	Recursively find the ranks of the points in $S_L$ and $S_R$.
+	\paragraph{Step 3:}
+	Sort the points in $S_L$ and $S_R$ by their y-value increasingly, and for each points in $S_R$, find their rank by plusing the number of points in $S_L$ whose y-value are smaller than the point.\\
+	
+	
+	The psesudocode of the divide-and-conquer approach to solve rank finding algorithm as follow:\\
+	
+	\newpage
+	
+	\begin{algorithm}
+		\caption{findRank(S, L, R)}
+	\begin{algorithmic}[1]
+		\REQUIRE S[n]: A set S of n planar points.\\
+				$L: 0$\\
+				$R: n$\\
+		\ENSURE rank[n]: The rank of all points in S.\\
+		
+		\IF {$length(S) \gets 1$}
+		\RETURN $rank(S[0]) \gets 0$
+		\ENDIF
+		\STATE $mid \gets (L + R)/ 2$\\
+		\STATE Split($S$) $\gets$ $S_L \bigcup S_R$, which\\
+			$S_L \gets $all points x-value $\leq$ mid,\\
+			$S_R \gets $all points x-value $>$ mid\\			
+		\STATE findRank(S, L, mid)\\
+		\STATE findRank(S, mid + 1, R)\\
+		
+		\STATE $S_L$ $\gets$ sort($S_L$, 'increasing', 'xValue')\\
+		\STATE $S_R$ $\gets$ ($S_R$, 'increasing', 'xValue')\\ 
+		\FOR{one point A to all points in $S_R$}
+			\STATE $rank(A) \gets rank(A) + length$(points in $S_L$ have less y-value than A)\\
+		\ENDFOR
+	\end{algorithmic}
+	\end{algorithm}
+
+	The time complexity analysis of the divide-and-conquer method to find these ranks is as follows:\\
+
+
+	$$ T(n)=\left\{	
+	\begin{aligned}
+		&2T(n/2) + c_{1}nlogn + c_{2}n, n > 1\\
+		&1, n = 1
+	\end{aligned}
+	\right.
+	$$
+	Let $n = 2^k$. It's easy to prove that\\
+	\begin{align*}
+	T(n) &= O(n log n) + O(n log^{2} n)\\
+		&= O(n log^{2} n)
+	\end{align*}	
+	, while the straightforward method needs $O(n^2)$.\\
+	The time complexity comparsion of two methods is shown in the chart as follows.\\
+	\begin{figure}
+	\centering
+	\caption{The time complexity comparsion of two methods.}
+	\includegraphics[scale = .8]{time.png}
+	\end{figure}
+
+	\newpage
+	The source code of the divide-and-conquer method in C++ as follows:\\
+	
+
+	\begin{lstlisting}[language={C++},breaklines=true]
+	void divide_finding(Point *points, int N, int l, int r) 
+	{
+	    if(l == r) return;
+	    int mid = (r + l) / 2;
+	
+	    divide_finding(points, N, l, mid);
+	    divide_finding(points, N, mid + 1, r);
+	
+	
+	    sort(points + l, points + mid + 1, comp_y);
+	    //sort(points + mid, points + r, comp_y);
+	    sort(points + mid + 1, points + r, comp_y);
+	
+	    int scan_a = l;
+	    //int scan_b = mid;
+	    int scan_b = mid + 1;
+	
+	    while(scan_a <= mid && scan_b <= r) 
+	    {
+	        if(points[scan_a].y < points[scan_b].y && points[scan_a].x < points[scan_b].x) 
+	        {
+	            while(scan_a++ < mid)
+	            {
+	                if(points[scan_a].y > points[scan_b].y) break;
+	            }
+	            points[scan_b].rank += scan_a - l;
+	            scan_a = l; //*
+	            scan_b++;
+	
+	        } else {
+	            scan_b++;
+	        }
+	
+	    }
+	    while(scan_b <= r) 
+	    {
+	        scan_b++;
+	    }
+	    sort(points + l, points + r + 1, comp_x);
+	}
+
+	
+	\end{lstlisting}
+	\newpage
+	The source code of the straightforward method in C++ as follows.It's easy to notice that this method time complexity is $O(n^2)$:\\
+	\begin{lstlisting}[language={C++},breaklines=true]
+	void straight_finding(Point *points, int N)
+	{
+	    for(int i = 0; i < N; ++i)
+	    {
+	        for(int j = 0; j < N; ++j)
+	        {
+	            if(points[i].x > points[j].x && points[i].y > points[j].y)
+	            {
+	                points[i].rank++;
+	            }
+	        }
+	    }	
+	}		
+	\end{lstlisting}	
+	
+	\section{Appendix:}
+	The full version of source code in C++ is as follows:
+	\newcommand{\dq}{"}
+
+	\pagecolor{bgcolor}
+	\newsavebox{\hlboxopenbrace}
+	\newsavebox{\hlboxclosebrace}
+	\newsavebox{\hlboxlessthan}
+	\newsavebox{\hlboxgreaterthan}
+	\newsavebox{\hlboxdollar}
+	\newsavebox{\hlboxunderscore}
+	\newsavebox{\hlboxand}
+	\newsavebox{\hlboxhash}
+	\newsavebox{\hlboxat}
+	\newsavebox{\hlboxbackslash}
+	\newsavebox{\hlboxpercent}
+	\newsavebox{\hlboxhat}
+	\setbox\hlboxopenbrace=\hbox{\verb.{.}
+	\setbox\hlboxclosebrace=\hbox{\verb.}.}
+	\setbox\hlboxlessthan=\hbox{\verb.<.}
+	\setbox\hlboxgreaterthan=\hbox{\verb.>.}
+	\setbox\hlboxdollar=\hbox{\verb.$.}
+	\setbox\hlboxunderscore=\hbox{\verb._.}
+	\setbox\hlboxand=\hbox{\verb.&.}
+	\setbox\hlboxhash=\hbox{\verb.#.}
+	\setbox\hlboxat=\hbox{\verb.@.}
+	\setbox\hlboxbackslash=\hbox{\verb.\.}
+	\setbox\hlboxpercent=\hbox{\verb.\%.}
+	\setbox\hlboxhat=\hbox{\verb.^.}
+	\def\urltilda{\kern -.15em\lower .7ex\hbox{\~{}}\kern .04em}
+	\noindent
+	\ttfamily
+	%\shorthandoff{"}
+	\hlstd{}\hllin{\ 1\ }\hlstd{}\hlppc{\#include\ \usebox{\hlboxlessthan}iostream\usebox{\hlboxgreaterthan}}\\
+	\hllin{\ 2\ }\hlstd{}\hlppc{\#include\ \usebox{\hlboxlessthan}algorithm\usebox{\hlboxgreaterthan}}\\
+	\hllin{\ 3\ }\hlstd{}\\
+	\hllin{\ 4\ }\hlstd{}\hlppc{\#define\ MAX\textunderscore N\ 100}\\
+	\hllin{\ 5\ }\hlstd{}\\
+	\hllin{\ 6\ }\hlstd{}\hlkwa{using\ namespace\ }\hlstd{std}\hlopt{;}\\
+	\hllin{\ 7\ }\hlstd{}\\
+	\hllin{\ 8\ }\hlstd{}\hlkwb{struct\ }\hlstd{Point}\hlopt{\usebox{\hlboxopenbrace}}\\
+	\hllin{\ 9\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwb{int\ }\hlstd{x}\hlopt{;}\\
+	\hllin{10\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwb{int\ }\hlstd{y}\hlopt{;}\\
+	\hllin{11\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwb{int\ }\hlstd{rank}\hlopt{;}\\
+	\hllin{12\ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\hlstd{points}\hlopt{{[}}\hlstd{MAX\textunderscore N}\hlopt{{]};}\\
+	\hllin{13\ }\hlstd{}\\
+	\hllin{14\ }\hlstd{}\hlkwb{bool\ }\hlstd{}\hlkwd{comp\textunderscore x}\hlstd{}\hlopt{(}\hlstd{}\hlkwb{const\ }\hlstd{Point}\hlopt{\&}\hlstd{a}\hlopt{,\ }\hlstd{}\hlkwb{const\ }\hlstd{Point\ }\hlopt{\&}\hlstd{b}\hlopt{)\usebox{\hlboxopenbrace}}\\
+	\hllin{15\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwa{return\ }\hlstd{a}\hlopt{.}\hlstd{x\ }\hlopt{\usebox{\hlboxlessthan}\ }\hlstd{b}\hlopt{.}\hlstd{x}\hlopt{;}\\
+	\hllin{16\ }\hlstd{}\\
+	\hllin{17\ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\\
+	\hllin{18\ }\hlstd{}\\
+	\hllin{19\ }\hlstd{}\hlkwb{bool\ }\hlstd{}\hlkwd{comp\textunderscore y}\hlstd{}\hlopt{(}\hlstd{}\hlkwb{const\ }\hlstd{Point\ }\hlopt{\&}\hlstd{a}\hlopt{,\ }\hlstd{}\hlkwb{const\ }\hlstd{Point\ }\hlopt{\&}\hlstd{b}\hlopt{)\usebox{\hlboxopenbrace}}\\
+	\hllin{20\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwa{return\ }\hlstd{a}\hlopt{.}\hlstd{y\ }\hlopt{\usebox{\hlboxlessthan}\ }\hlstd{b}\hlopt{.}\hlstd{y}\hlopt{;}\\
+	\hllin{21\ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\\
+	\hllin{22\ }\hlstd{}\\
+	\hllin{23\ }\hlstd{}\hlkwb{void\ }\hlstd{}\hlkwd{straight\textunderscore finding}\hlstd{}\hlopt{(}\hlstd{Point\ }\hlopt{{*}}\hlstd{points}\hlopt{,\ }\hlstd{}\hlkwb{int\ }\hlstd{N}\hlopt{)\usebox{\hlboxopenbrace}}\\
+	\hllin{24\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwa{for}\hlstd{}\hlopt{(}\hlstd{}\hlkwb{int\ }\hlstd{i\ }\hlopt{=\ }\hlstd{}\hlnum{0}\hlstd{}\hlopt{;\ }\hlstd{i\ }\hlopt{\usebox{\hlboxlessthan}\ }\hlstd{N}\hlopt{;\ ++}\hlstd{i}\hlopt{)\usebox{\hlboxopenbrace}}\\
+	\hllin{25\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ }\hlstd{}\hlkwa{for}\hlstd{}\hlopt{(}\hlstd{}\hlkwb{int\ }\hlstd{j\ }\hlopt{=\ }\hlstd{}\hlnum{0}\hlstd{}\hlopt{;\ }\hlstd{j\ }\hlopt{\usebox{\hlboxlessthan}\ }\hlstd{N}\hlopt{;\ ++}\hlstd{j}\hlopt{)\usebox{\hlboxopenbrace}}\\
+	\hllin{26\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ \ }\hlstd{}\hlkwa{if}\hlstd{}\hlopt{(}\hlstd{points}\hlopt{{[}}\hlstd{i}\hlopt{{]}.}\hlstd{x\ }\hlopt{\usebox{\hlboxgreaterthan}\ }\hlstd{points}\hlopt{{[}}\hlstd{j}\hlopt{{]}.}\hlstd{x\ }\hlopt{\&\&\ }\hlstd{points}\hlopt{{[}}\hlstd{i}\hlopt{{]}.}\hlstd{y\ }\hlopt{\usebox{\hlboxgreaterthan}\ }\\
+	\hllin{\ \ \ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }\hlstd{points}\hlopt{{[}}\hlstd{j}\hlopt{{]}.}\hlstd{y}\hlopt{)\usebox{\hlboxopenbrace}}\Righttorque\\
+	\hllin{27\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }\hlstd{points}\hlopt{{[}}\hlstd{i}\hlopt{{]}.}\hlstd{rank}\hlopt{++;}\\
+	\hllin{28\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ \ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\\
+	\hllin{29\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\\
+	\hllin{30\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\\
+	\hllin{31\ }\hlstd{}\\
+	\hllin{32\ }\hlstd{}\\
+	\hllin{33\ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\\
+	\hllin{34\ }\hlstd{}\\
+	\hllin{35\ }\hlstd{}\hlkwb{void\ }\hlstd{}\hlkwd{divide\textunderscore finding}\hlstd{}\hlopt{(}\hlstd{Point\ }\hlopt{{*}}\hlstd{points}\hlopt{,\ }\hlstd{}\hlkwb{int\ }\hlstd{N}\hlopt{,\ }\hlstd{}\hlkwb{int\ }\hlstd{l}\hlopt{,\ }\hlstd{}\hlkwb{int\ }\hlstd{r}\hlopt{)\usebox{\hlboxopenbrace}}\\
+	\hllin{36\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwa{if}\hlstd{}\hlopt{(}\hlstd{l\ }\hlopt{==\ }\hlstd{r}\hlopt{)\ }\hlstd{}\hlkwa{return}\hlstd{}\hlopt{;}\\
+	\hllin{37\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwb{int\ }\hlstd{mid\ }\hlopt{=\ (}\hlstd{r\ }\hlopt{+\ }\hlstd{l}\hlopt{)\ /\ }\hlstd{}\hlnum{2}\hlstd{}\hlopt{;}\\
+	\hllin{38\ }\hlstd{}\\
+	\hllin{39\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwd{divide\textunderscore finding}\hlstd{}\hlopt{(}\hlstd{points}\hlopt{,\ }\hlstd{N}\hlopt{,\ }\hlstd{l}\hlopt{,\ }\hlstd{mid}\hlopt{);}\\
+	\hllin{40\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwd{divide\textunderscore finding}\hlstd{}\hlopt{(}\hlstd{points}\hlopt{,\ }\hlstd{N}\hlopt{,\ }\hlstd{mid\ }\hlopt{+\ }\hlstd{}\hlnum{1}\hlstd{}\hlopt{,\ }\hlstd{r}\hlopt{);}\\
+	\hllin{41\ }\hlstd{}\\
+	\hllin{42\ }\hlstd{}\\
+	\hllin{43\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwd{sort}\hlstd{}\hlopt{(}\hlstd{points\ }\hlopt{+\ }\hlstd{l}\hlopt{,\ }\hlstd{points\ }\hlopt{+\ }\hlstd{mid\ }\hlopt{+\ }\hlstd{}\hlnum{1}\hlstd{}\hlopt{,\ }\hlstd{comp\textunderscore y}\hlopt{);}\\
+	\hllin{44\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlslc{//sort(points\ +\ mid,\ points\ +\ r,\ comp\textunderscore y);}\\
+	\hllin{45\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwd{sort}\hlstd{}\hlopt{(}\hlstd{points\ }\hlopt{+\ }\hlstd{mid\ }\hlopt{+\ }\hlstd{}\hlnum{1}\hlstd{}\hlopt{,\ }\hlstd{points\ }\hlopt{+\ }\hlstd{r}\hlopt{,\ }\hlstd{comp\textunderscore y}\hlopt{);}\\
+	\hllin{46\ }\hlstd{}\\
+	\hllin{47\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwb{int\ }\hlstd{scan\textunderscore a\ }\hlopt{=\ }\hlstd{l}\hlopt{;}\\
+	\hllin{48\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlslc{//int\ scan\textunderscore b\ =\ mid;}\\
+	\hllin{49\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwb{int\ }\hlstd{scan\textunderscore b\ }\hlopt{=\ }\hlstd{mid\ }\hlopt{+\ }\hlstd{}\hlnum{1}\hlstd{}\hlopt{;}\\
+	\hllin{50\ }\hlstd{}\\
+	\hllin{51\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwa{while}\hlstd{}\hlopt{(}\hlstd{scan\textunderscore a\ }\hlopt{\usebox{\hlboxlessthan}=\ }\hlstd{mid\ }\hlopt{\&\&\ }\hlstd{scan\textunderscore b\ }\hlopt{\usebox{\hlboxlessthan}=\ }\hlstd{r}\hlopt{)\usebox{\hlboxopenbrace}}\\
+	\hllin{52\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ }\hlstd{}\hlkwa{if}\hlstd{}\hlopt{(}\hlstd{points}\hlopt{{[}}\hlstd{scan\textunderscore a}\hlopt{{]}.}\hlstd{y\ }\hlopt{\usebox{\hlboxlessthan}\ }\hlstd{points}\hlopt{{[}}\hlstd{scan\textunderscore b}\hlopt{{]}.}\hlstd{y\ }\hlopt{\&\&\ }\hlstd{points}\hlopt{{[}}\\
+	\hllin{\ \ \ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ }\hlstd{scan\textunderscore a}\hlopt{{]}.}\hlstd{x\ }\hlopt{\usebox{\hlboxlessthan}\ }\hlstd{points}\hlopt{{[}}\hlstd{scan\textunderscore b}\hlopt{{]}.}\hlstd{x}\hlopt{)\usebox{\hlboxopenbrace}}\\
+	\hllin{53\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ \ }\hlstd{}\hlkwa{while}\hlstd{}\hlopt{(}\hlstd{scan\textunderscore a}\hlopt{++\ \usebox{\hlboxlessthan}\ }\hlstd{mid}\hlopt{)\usebox{\hlboxopenbrace}}\Righttorque\\
+	\hllin{54\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }\hlstd{}\hlkwa{if}\hlstd{}\hlopt{(}\hlstd{points}\hlopt{{[}}\hlstd{scan\textunderscore a}\hlopt{{]}.}\hlstd{y\ }\hlopt{\usebox{\hlboxgreaterthan}\ }\hlstd{points}\hlopt{{[}}\hlstd{scan\textunderscore b}\hlopt{{]}.}\hlstd{y}\hlopt{)\ }\Righttorque\\
+	\hllin{\ \ \ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ }\hlstd{}\hlkwa{break}\hlstd{}\hlopt{;}\\
+	\hllin{55\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ \ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\\
+	\hllin{56\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ \ }\hlstd{points}\hlopt{{[}}\hlstd{scan\textunderscore b}\hlopt{{]}.}\hlstd{rank\ }\hlopt{+=\ }\hlstd{scan\textunderscore a\ }\hlopt{{-}\ }\hlstd{l}\hlopt{;}\Righttorque\\
+	\hllin{57\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ \ }\hlstd{scan\textunderscore a\ }\hlopt{=\ }\hlstd{l}\hlopt{;\ }\hlstd{}\hlslc{//{*}}\\
+	\hllin{58\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ \ }\hlstd{scan\textunderscore b}\hlopt{++;}\\
+	\hllin{59\ }\hlstd{}\\
+	\hllin{60\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\hlstd{}\hlkwa{else}\hlstd{}\hlopt{\usebox{\hlboxopenbrace}}\\
+	\hllin{61\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ \ }\hlstd{}\hlslc{//scan\textunderscore a++;}\\
+	\hllin{62\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ \ }\hlstd{scan\textunderscore b}\hlopt{++;}\\
+	\hllin{63\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\\
+	\hllin{64\ }\hlstd{}\\
+	\hllin{65\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\\
+	\hllin{66\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwa{while}\hlstd{}\hlopt{(}\hlstd{scan\textunderscore b\ }\hlopt{\usebox{\hlboxlessthan}=\ }\hlstd{r}\hlopt{)\ \usebox{\hlboxopenbrace}}\\
+	\hllin{67\ }\hlstd{}\\
+	\hllin{68\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ }\hlstd{}\hlslc{//points{[}scan\textunderscore b{]}.rank\ +=\ scan\textunderscore a\ {-}\ l;}\\
+	\hllin{69\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ }\hlstd{scan\textunderscore b}\hlopt{++;}\\
+	\hllin{70\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\\
+	\hllin{71\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwd{sort}\hlstd{}\hlopt{(}\hlstd{points\ }\hlopt{+\ }\hlstd{l}\hlopt{,\ }\hlstd{points\ }\hlopt{+\ }\hlstd{r\ }\hlopt{+\ }\hlstd{}\hlnum{1}\hlstd{}\hlopt{,\ }\hlstd{comp\textunderscore x}\hlopt{);}\\
+	\hllin{72\ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\\
+	\hllin{73\ }\hlstd{}\\
+	\hllin{74\ }\hlstd{}\hlkwb{int\ }\hlstd{}\hlkwd{main}\hlstd{}\hlopt{()\ \usebox{\hlboxopenbrace}}\\
+	\hllin{75\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwb{int\ }\hlstd{N}\hlopt{;}\\
+	\hllin{76\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwa{while}\hlstd{}\hlopt{(}\hlstd{cin\ }\hlopt{\usebox{\hlboxgreaterthan}\usebox{\hlboxgreaterthan}\ }\hlstd{N}\hlopt{)\usebox{\hlboxopenbrace}}\\
+	\hllin{77\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ }\hlstd{}\hlkwa{for}\hlstd{}\hlopt{(}\hlstd{}\hlkwb{int\ }\hlstd{i\ }\hlopt{=\ }\hlstd{}\hlnum{0}\hlstd{}\hlopt{;\ }\hlstd{i\ }\hlopt{\usebox{\hlboxlessthan}\ }\hlstd{N}\hlopt{;\ ++}\hlstd{i}\hlopt{)\usebox{\hlboxopenbrace}}\\
+	\hllin{78\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ \ }\hlstd{cin\ }\hlopt{\usebox{\hlboxgreaterthan}\usebox{\hlboxgreaterthan}\ }\hlstd{points}\hlopt{{[}}\hlstd{i}\hlopt{{]}.}\hlstd{x\ }\hlopt{\usebox{\hlboxgreaterthan}\usebox{\hlboxgreaterthan}\ }\hlstd{points}\hlopt{{[}}\hlstd{i}\hlopt{{]}.}\hlstd{y}\hlopt{;}\\
+	\hllin{79\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\\
+	\hllin{80\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ }\hlstd{}\hlkwd{sort}\hlstd{}\hlopt{(}\hlstd{points}\hlopt{,\ }\hlstd{points\ }\hlopt{+\ }\hlstd{N}\hlopt{,\ }\hlstd{comp\textunderscore x}\hlopt{);}\\
+	\hllin{81\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ }\hlstd{}\hlkwd{sort}\hlstd{}\hlopt{(}\hlstd{points\ }\hlopt{+\ }\hlstd{}\hlnum{0}\hlstd{}\hlopt{,\ }\hlstd{points\ }\hlopt{+\ }\hlstd{}\hlnum{1}\hlstd{}\hlopt{,\ }\hlstd{comp\textunderscore y}\hlopt{);}\\
+	\hllin{82\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ }\hlstd{}\hlkwd{divide\textunderscore finding}\hlstd{}\hlopt{(}\hlstd{points}\hlopt{,\ }\hlstd{N}\hlopt{,\ }\hlstd{}\hlnum{0}\hlstd{}\hlopt{,\ }\hlstd{N\ }\hlopt{{-}\ }\hlstd{}\hlnum{1}\hlstd{}\hlopt{);}\\
+	\hllin{83\ }\hlstd{}\\
+	\hllin{84\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ }\hlstd{}\hlkwa{for}\hlstd{}\hlopt{(}\hlstd{}\hlkwb{int\ }\hlstd{i\ }\hlopt{=\ }\hlstd{}\hlnum{0}\hlstd{}\hlopt{;\ }\hlstd{i\ }\hlopt{\usebox{\hlboxlessthan}\ }\hlstd{N}\hlopt{;\ }\hlstd{i}\hlopt{++)\usebox{\hlboxopenbrace}}\\
+	\hllin{85\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ \ }\hlstd{cout\ }\hlopt{\usebox{\hlboxlessthan}\usebox{\hlboxlessthan}\ }\hlstd{points}\hlopt{{[}}\hlstd{i}\hlopt{{]}.}\hlstd{x\ }\hlopt{\usebox{\hlboxlessthan}\usebox{\hlboxlessthan}}\hlstd{}\hlstr{\dq{}\ \dq{}}\hlstd{\ }\hlopt{\usebox{\hlboxlessthan}\usebox{\hlboxlessthan}}\hlstd{\ \ }\hlopt{}\hlstd{points}\hlopt{{[}}\hlstd{i}\hlopt{{]}.}\hlstd{y}\hlstd{\ \ }\hlstd{}\hlopt{\usebox{\hlboxlessthan}\usebox{\hlboxlessthan}\ }\hlstd{}\hlstr{\dq{}\ }\\
+	\hllin{\ \ \ }\hlstr{}\hlstd{\ \ \ \ \ \ \ \ \ \ \ \ }\hlstr{\dq{}}\hlstd{\ }\hlopt{\usebox{\hlboxlessthan}\usebox{\hlboxlessthan}\ }\hlstd{points}\hlopt{{[}}\hlstd{i}\hlopt{{]}.}\hlstd{rank\ }\hlopt{\usebox{\hlboxlessthan}\usebox{\hlboxlessthan}\ }\hlstd{endl}\hlopt{;}\\
+	\hllin{86\ }\hlstd{}\hlstd{\ \ \ \ \ \ \ \ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\\
+	\hllin{87\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\\
+	\hllin{88\ }\hlstd{}\Righttorque\\
+	\hllin{89\ }\hlstd{}\hlstd{\ \ \ \ }\hlstd{}\hlkwa{return\ }\hlstd{}\hlnum{0}\hlstd{}\hlopt{;}\\
+	\hllin{90\ }\hlstd{}\hlopt{\usebox{\hlboxclosebrace}}\hlstd{}\\
+	\mbox{}
+	\normalfont
+	\normalsize
+	%\shorthandon{"}
+	
+	\newpage
+	Result:\\
+	\begin{figure}
+		\centering
+		\includegraphics[scale = 1.5]{result.png}
+	\end{figure}
+
+
+\end{document}
